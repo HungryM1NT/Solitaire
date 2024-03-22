@@ -1,4 +1,4 @@
-import {setDraggable} from './cardLogic.js'
+import {setDraggable, updateCardCoordinates} from './cardLogic.js'
 
 
 export function startRowCreator(deck) {
@@ -9,10 +9,16 @@ export function startRowCreator(deck) {
         for (let j = 0; j <= i; j++) {
             let card = deck.pop()
             card.divId = startSetCard(i, j)
+            updateCardCoordinates(card, i)
             row.push(card)
             if (j != 0) {                                    // Установка начальных связей родитель-ребенок
                 row[j - 1].child = card
                 card.parent = row[j - 1]
+            } else {                                         //!!!!!!!!!!!!!!!!!!!!! Заглушка на пустые места
+                let blankspot = {
+                    child: undefined,
+                }
+                card.parent = blankspot 
             }
         }
         rowsArray.push(row)
@@ -23,7 +29,7 @@ export function startRowCreator(deck) {
         mainTable.insertAdjacentHTML('beforeend',
         `<div
         id='card${10 * x + y}'
-        style='left:${9 * x + 3}vw; z-index:${x}; top:${y * 2 + 2}vh'
+        style='left:${9 * x + 3}vw; z-index:${y}; top:${y * 2 + 2}vh'
         class=card-div>
             <img src='https://www.deckofcardsapi.com/static/img/back.png' draggable='false'>
         </div>`)
@@ -35,10 +41,11 @@ export function update(rowsArray) {
     for (let row of rowsArray) {                                                      // Каждая верхняя карта становится активной
         if (row.length) {
             let lastCard = row[row.length - 1]
-            if (!lastCard.isDragable) {
-                setDraggable(lastCard, true)
+            if (!lastCard.isActive) {
+                setDraggable(lastCard, true, rowsArray)
                 let cardElement = document.querySelector(`#${lastCard.divId}`)
                 cardElement.innerHTML = `<img src=${lastCard.image}></img>`
+                lastCard.isActive = true
             } 
         }
     }

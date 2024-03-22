@@ -8,9 +8,11 @@ export async function createDeck() {
         card.isActive = false
         card.parent = null
         card.child = null
-        card.div = undefined
-        card.isDragable = false
+        card.divId = undefined
         card.coordinates = undefined
+        card.left = undefined
+        card.top = undefined
+        card.row = undefined
         return card
     })
     return deck
