@@ -1,7 +1,7 @@
 import { update } from "./cardRender.js"
 import { mainTableLadder } from "./cardLadder.js"
 
-export function setDraggable(card, isMain=false, rowsArray) {
+export function setDraggable(card, rowsArray) {
     let pos1, pos2, pos3, pos4
     const startElement = document.querySelector(`#${card.divId}`)
     startElement.onmousedown = dragMouseDown
@@ -11,6 +11,7 @@ export function setDraggable(card, isMain=false, rowsArray) {
         setZIndex(card, 100)
         pos3 = e.clientX                               // Получаем начальные координаты мышки
         pos4 = e.clientY
+        updateCardCoordinates(card, card.row)
         document.onmousemove = elementDrag
         document.onmouseup = closeDragELement
     }
@@ -25,12 +26,18 @@ export function setDraggable(card, isMain=false, rowsArray) {
         const newElementTop = startElement.offsetTop - pos2
         move(card, newElementLeft, newElementTop)
 
-        function move(card, newElementLeft, newElementTop, element=startElement, k=0) {
+        function move(card, newElementLeft, newElementTop, element=startElement, k=0, isMain=true) {
             if (card.child) {
-                move(card.child, newElementLeft, newElementTop, document.querySelector(`#${card.child.divId}`), k + 4)
+                move(card.child, newElementLeft, newElementTop, document.querySelector(`#${card.child.divId}`), k + 4, false)
             }
-            element.style.left = newElementLeft / window.innerWidth * 100 + "vw"
-            element.style.top = newElementTop / window.innerHeight * 100 + k + "vh"
+            // element.style.left = newElementLeft / window.innerWidth * 100 + "vw"
+            // element.style.top = newElementTop / window.innerHeight * 100 + k + "vh"
+            if (!isMain || (newElementLeft + element.offsetWidth <= window.innerWidth && newElementLeft >= 0)) {             // Проверка на края видимой области
+                element.style.left = newElementLeft / window.innerWidth * 100 + "vw"
+            }
+            if (!isMain || (newElementTop + element.offsetHeight <= window.innerHeight && newElementTop >= 0)) {
+                element.style.top = newElementTop / window.innerHeight * 100 + k + "vh"
+            }
         }
     }
 
@@ -52,8 +59,13 @@ export function setDraggable(card, isMain=false, rowsArray) {
 
 }
 
-export function updateCardCoordinates(card, i, k=0) {                                                                 // Функция для выдачи координат
-    let cardElement = document.querySelector(`#${card.divId}`)
+export function updateCardCoordinates(card, i) {                                                                 // Функция для выдачи координат
+    let cardElement
+    if (card.isBlankSpot) {
+        cardElement = document.querySelector(`#blank-spot${i}`)
+    } else {
+        cardElement = document.querySelector(`#${card.divId}`)
+    }
     card.left = cardElement.offsetLeft
     card.top = cardElement.offsetTop
     card.coordinates = [card.left + cardElement.offsetWidth / 2, card.top + cardElement.offsetHeight / 2]
@@ -64,13 +76,13 @@ function getNewCords(card, rowsArray) {
     const cards = rowsArray[card.row].toSpliced(0, rowsArray[card.row].indexOf(card))                           // Получение карт с двигаемой
     for (let i = 0; i < 7; i++) {
         let row = rowsArray[i]
-        if (row.length != 0) {
+        // if (row.length != 0) {
             const lastRowCard = row[row.length - 1]
             if (card != lastRowCard && isClose(card, lastRowCard) && mainTableLadder(card, lastRowCard)) {
                 rowsArray[i] = row.concat(cards)                                                                               // Добавление в новый массив
                 rowsArray[card.row].splice(rowsArray[card.row].indexOf(card))                                    // Потом посмотреть, как сократить
                 // console.log(rowsArray[card.row])
-                setNewPosition(cards, lastRowCard.left, lastRowCard.top, i, 4)
+                setNewPosition(cards, lastRowCard, i, 4)
                 // updateCardCoordinates(cards, i)
                 setNewParent(card, lastRowCard)
                 updateZIndex(card, lastRowCard)
@@ -78,15 +90,21 @@ function getNewCords(card, rowsArray) {
                 console.log(rowsArray)
                 return
             }
-        }
+        // }
     }
-    setNewPosition(cards, card.left, card.top, card.row, 0)
+    setNewPosition(cards, card, card.row, 0)
 }
 
-function setNewPosition(cards, left, top, rowId, k) {
+function setNewPosition(cards, lastRowCard, rowId, k) {
+    let left = lastRowCard.left
+    let top = lastRowCard.top
     for (let card of cards) {
         let cardElement = document.querySelector(`#${card.divId}`)
         cardElement.style.left = left / window.innerWidth * 100  + "vw"
+        if (lastRowCard.isBlankSpot) {
+            k = 0
+            lastRowCard = null
+        }
         cardElement.style.top = top / window.innerHeight * 100 + k + "vh"
         updateCardCoordinates(card, rowId)
         left = card.left
@@ -95,7 +113,8 @@ function setNewPosition(cards, left, top, rowId, k) {
     }
 }
 
-function isClose(card1, card2) {                                                              // Проверка на то, близка ли карта 
+function isClose(card1, card2) {                                                              // Проверка на то, близка ли карта
+    updateCardCoordinates(card2, card2.row)
     const element = document.querySelector(`#${card1.divId}`)
     const halfWidth = card2.coordinates[0] - card2.left
     const halfHeight = card2.coordinates[1] - card2.top
@@ -113,8 +132,12 @@ function setNewParent(currentCard, newParentCard) {
 
 function updateZIndex(card, lastRowCard) {
     let cardElement = document.querySelector(`#${card.divId}`)
-    let lastRowCardElement = document.querySelector(`#${lastRowCard.divId}`)
-    cardElement.style["z-index"] = parseInt(lastRowCardElement.style["z-index"]) + 1
+    if (lastRowCard.isBlankSpot) {
+        cardElement.style["z-index"] = 1
+    } else {
+        let lastRowCardElement = document.querySelector(`#${lastRowCard.divId}`)
+        cardElement.style["z-index"] = parseInt(lastRowCardElement.style["z-index"]) + 1
+    }
     if (card.child) {
         updateZIndex(card.child, card)
     }

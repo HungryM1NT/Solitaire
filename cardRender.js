@@ -6,7 +6,7 @@ export function startRowCreator(deck) {
     let rowsArray = []
     for (let i = 0; i < 7; i++) {
         let row = []
-        // addBlankSpot(row, i)
+        addBlankSpot(row, i)
         // row.push(blankspot)
         for (let j = 0; j <= i; j++) {
             let card = deck.pop()
@@ -42,11 +42,11 @@ export function startRowCreator(deck) {
 
 export function update(rowsArray) {                                                   // Переделать под каждый row
     for (let row of rowsArray) {                                                      // Каждая верхняя карта становится активной
-        if (row.length) {
-        // if (row.length != 1) {
+        // if (row.length) {
+        if (row.length != 1) {
             let lastCard = row[row.length - 1]
             if (!lastCard.isActive) {
-                setDraggable(lastCard, true, rowsArray)
+                setDraggable(lastCard, rowsArray)
                 let cardElement = document.querySelector(`#${lastCard.divId}`)
                 cardElement.innerHTML = `<img src=${lastCard.image}></img>`
                 lastCard.isActive = true
@@ -59,8 +59,9 @@ function addBlankSpot(row, index) {
     let blankSpot = {
         value: 14,
         child: null,
-        suit: undefined,
-        row: index
+        suit: "any",
+        isBlankSpot: true
     }
+    updateCardCoordinates(blankSpot, index)
     row.push(blankSpot)
 }
