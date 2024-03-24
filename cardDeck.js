@@ -13,7 +13,26 @@ export async function createDeck() {
         card.left = undefined
         card.top = undefined
         card.row = undefined
+        card.value = newValue(card.value)
         return card
     })
     return deck
-}  
+}
+
+
+function newValue(oldValue) {
+    if (!isNaN(Number(oldValue))) {
+        return Number(oldValue)
+    } else {
+        switch (oldValue) {
+            case "JACK":
+                return 11
+            case "QUEEN":
+                return 12
+            case "KING":
+                return 13
+            case "ACE":
+                return 1
+        }
+    }
+}

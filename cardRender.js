@@ -6,6 +6,8 @@ export function startRowCreator(deck) {
     let rowsArray = []
     for (let i = 0; i < 7; i++) {
         let row = []
+        // addBlankSpot(row, i)
+        // row.push(blankspot)
         for (let j = 0; j <= i; j++) {
             let card = deck.pop()
             card.divId = startSetCard(i, j)
@@ -16,11 +18,12 @@ export function startRowCreator(deck) {
                 card.parent = row[j - 1]
             } else {                                         //!!!!!!!!!!!!!!!!!!!!! Заглушка на пустые места
                 let blankspot = {
-                    child: undefined,
+                    chilfffdassfasfsdfsd: undefined,
                 }
                 card.parent = blankspot 
             }
         }
+        // updateCardCoordinates(row, i)
         rowsArray.push(row)
     }
     return rowsArray
@@ -37,9 +40,10 @@ export function startRowCreator(deck) {
     }
 }
 
-export function update(rowsArray) {
+export function update(rowsArray) {                                                   // Переделать под каждый row
     for (let row of rowsArray) {                                                      // Каждая верхняя карта становится активной
         if (row.length) {
+        // if (row.length != 1) {
             let lastCard = row[row.length - 1]
             if (!lastCard.isActive) {
                 setDraggable(lastCard, true, rowsArray)
@@ -49,4 +53,14 @@ export function update(rowsArray) {
             } 
         }
     }
+}
+
+function addBlankSpot(row, index) {
+    let blankSpot = {
+        value: 14,
+        child: null,
+        suit: undefined,
+        row: index
+    }
+    row.push(blankSpot)
 }
