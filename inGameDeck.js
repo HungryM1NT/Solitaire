@@ -1,4 +1,3 @@
-function inGameDeckRender(deck) {
-    const openedDeck = []
-    
+function setrRestartDeckElement() {
+
 }

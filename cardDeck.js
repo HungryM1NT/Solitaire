@@ -13,6 +13,7 @@ export async function createDeck() {
         card.left = undefined
         card.top = undefined
         card.row = undefined
+        card.isBlankSpot = false
         card.value = newValue(card.value)
         return card
     })
