@@ -1,12 +1,13 @@
 import { update } from "./cardRender.js"
 import { mainTableLadder, finishSpotsLadder } from "./cardLadder.js"
 
-export function setDraggable(card, gameArray) {
+export function setDraggable(card, gameArray, openDeck) {
     let pos1, pos2, pos3, pos4
     const startElement = document.querySelector(`#${card.divId}`)
     startElement.onmousedown = dragMouseDown
 
     function dragMouseDown(e) {
+        console.log(gameArray)
         e.preventDefault()
         setZIndex(card, 100)
         pos3 = e.clientX                               // Получаем начальные координаты мышки
@@ -41,7 +42,7 @@ export function setDraggable(card, gameArray) {
 
     function closeDragELement() {             // При отпускании кнопки восстанавливаем прошлые параметры карты
         setZIndex(card, -100)
-        getNewCords(card, gameArray)
+        getNewCords(card, gameArray, openDeck)
         document.onmouseup = null
         document.onmousemove = null
     }
@@ -70,42 +71,45 @@ export function updateCardCoordinates(card, i) {                                
     card.row = i
 }
 
-function getNewCords(card, gameArray) {
-    const cards = gameArray[card.row].toSpliced(0, gameArray[card.row].indexOf(card))                           // Получение карт начиная с двигаемой
+function getNewCords(card, gameArray, openDeck) {
+    let cards
+    let ladderFunction
+    let k
+
+    if (card.row != -1) {
+        cards = gameArray[card.row].toSpliced(0, gameArray[card.row].indexOf(card))                           // Получение карт начиная с двигаемой
+    } else {
+        cards = [card]
+    }
+
 
     for (let i = 0; i < 11; i++) {                
-        if (i < 7) {                                                                                                      // Проверка по основным строкам
-            let row = gameArray[i]
-            const lastRowCard = row[row.length - 1]
-            if (card != lastRowCard && isClose(card, lastRowCard) && mainTableLadder(card, lastRowCard)) {
-                gameArray[i] = row.concat(cards)                                                                               // Добавление в новый массив
+        let row = gameArray[i]
+        const lastRowCard = row[row.length - 1]
+        if (i < 7) {
+            ladderFunction = mainTableLadder
+            k = 4
+        } else if (cards.length == 1) {
+            ladderFunction = finishSpotsLadder
+            k = 0
+        }
+        if (card != lastRowCard && isClose(card, lastRowCard) && ladderFunction(card, lastRowCard)) {
+            gameArray[i] = row.concat(cards)                                                                               // Добавление в новый массив
+            if (card.row != -1) {
                 gameArray[card.row].splice(gameArray[card.row].indexOf(card))                                    // Потом посмотреть, как сократить
-                setNewPosition(cards, lastRowCard, i, 4)
-                setNewParent(card, lastRowCard)
-                updateZIndex(card, lastRowCard)
-                update(gameArray)
-                console.log(gameArray)
-                return
+            } else {
+                openDeck.pop()
             }
-        } else {
-            if (cards.length == 1) {
-                let row = gameArray[i]
-                const lastRowCard = row[row.length - 1]
-                console.log(lastRowCard)
-                if (card != lastRowCard && isClose(card, lastRowCard) && finishSpotsLadder(card, lastRowCard)) {
-                    gameArray[i] = row.concat(cards)                                                                               // Добавление в новый массив
-                    gameArray[card.row].splice(gameArray[card.row].indexOf(card))                                                        // Потом посмотреть, как сократить
-                    setNewPosition(cards, lastRowCard, i, 0)
-                    setNewParent(card, lastRowCard)
-                    updateZIndex(card, lastRowCard)
-                    update(gameArray)
-                    console.log(gameArray)
-                    return
-                }
+            if (lastRowCard.isBlankSpot) {
+                k = 0
             }
+            setNewPosition(cards, lastRowCard, i, k)
+            setNewParent(card, lastRowCard)
+            updateZIndex(card, lastRowCard)
+            update(gameArray, openDeck)
+            return
         }
     }
-    // console.log(1)
     setNewPosition(cards, card, card.row, 0)
 }
 
@@ -115,10 +119,6 @@ function setNewPosition(cards, lastRowCard, rowId, k) {
     for (let card of cards) {
         let cardElement = document.querySelector(`#${card.divId}`)
         cardElement.style.left = left / window.innerWidth * 100  + "vw"
-        if (lastRowCard.isBlankSpot ) {
-            k = 0
-            lastRowCard = null
-        }
         cardElement.style.top = top / window.innerHeight * 100 + k + "vh"
         updateCardCoordinates(card, rowId)
         left = card.left
@@ -138,8 +138,10 @@ function isClose(card1, card2) {                                                
 }
 
 function setNewParent(currentCard, newParentCard) {
-    const oldParent = currentCard.parent
-    oldParent.child = null
+    if (currentCard.parent) {
+        const oldParent = currentCard.parent
+        oldParent.child = null
+    }
     currentCard.parent = newParentCard
     newParentCard.child = currentCard
 }

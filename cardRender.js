@@ -28,12 +28,12 @@ export function startRowCreator(deck, gameArray) {
     }
 }
 
-export function update(gameArray) {                                                   // Переделать под каждый row
+export function update(gameArray, openDeck) {                                                   // Переделать под каждый row
     for (let row of gameArray) {                                                      // Каждая верхняя карта становится активной
         if (row.length != 1) {
             let lastCard = row[row.length - 1]
             if (!lastCard.isActive) {
-                setDraggable(lastCard, gameArray)
+                setDraggable(lastCard, gameArray, openDeck)
                 let cardElement = document.querySelector(`#${lastCard.divId}`)
                 cardElement.innerHTML = `<img src=${lastCard.image}></img>`
                 lastCard.isActive = true
